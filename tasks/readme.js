@@ -16,10 +16,7 @@
  */
 
 var dox = require('dox');
-var fs = require('fs');
 var hogan = require('hogan.js');
-var pkg = require('../package');
-var util = require('util');
 
 /**
  * Exports
@@ -35,16 +32,21 @@ module.exports = function (grunt) {
   // ==========================================================================
 
   grunt.registerMultiTask('readme', 'Building README', function () {
+    var pkg = grunt['package'];
     var data = this.data;
     var files = this.files;
+    var options = this.options({
+      comment: 'docs/item.hogan',
+      readme: 'docs/readme.hogan'
+    });
 
     this.files.forEach(function(file) {
       var src = grunt.file.read(file.src);
       var json = dox.parseComments(src, { raw: true });
       var templates = {};
 
-      templates.docs = hogan.compile(fs.readFileSync('docs/template.hogan', 'utf8'));
-      templates.readme = hogan.compile(fs.readFileSync('docs/readme.hogan', 'utf8'));
+      templates.docs = hogan.compile(grunt.file.read(options.comment));
+      templates.readme = hogan.compile(grunt.file.read(options.readme));
 
       json = preProcess(json);
 
