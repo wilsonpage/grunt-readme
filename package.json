@@ -1,0 +1,37 @@
+{
+  "name": "grunt-readme",
+  "description": "Creates a README.md file from your code comments",
+  "version": "0.1.0",
+  "homepage": "https://github.com/wilsonpage/grunt-readme",
+  "author": {
+    "name": "Wilson Page"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wilsonpage/grunt-readme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wilsonpage/grunt-readme/issues"
+  },
+  "main": "Gruntfile.js",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "dependencies": {
+    "dox": "~0.4.3",
+    "hogan.js": "~2.0.0"
+  },
+  "devDependencies": {},
+  "peerDependencies": {
+    "grunt": "~0.4.0"
+  },
+  "keywords": [
+    "gruntplugin"
+  ],
+  "contributors": [
+    {
+      "name": "Wilson Page"
+    }
+  ],
+  "readmeFilename": "README.md"
+}
