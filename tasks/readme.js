@@ -54,6 +54,7 @@ module.exports = function (grunt) {
       var readme = templates.readme.render({ pkg: pkg, docs: docs });
 
       grunt.file.write(file.dest, readme);
+      grunt.log.writeln('Written "' + file.dest + '" with ' + json.length + ' comments');
     });
   });
 };
