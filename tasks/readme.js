@@ -32,7 +32,7 @@ module.exports = function (grunt) {
   // ==========================================================================
 
   grunt.registerMultiTask('readme', 'Building README', function () {
-    var pkg = grunt['package'];
+    var pkg = grunt.config.data.pkg;
     var data = this.data;
     var files = this.files;
     var options = this.options({
