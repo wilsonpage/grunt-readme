@@ -17,6 +17,7 @@
 
 var dox = require('dox');
 var hogan = require('hogan.js');
+var path = require('path');
 
 /**
  * Exports
@@ -40,21 +41,35 @@ module.exports = function (grunt) {
       readme: 'docs/readme.hogan'
     });
 
-    this.files.forEach(function(file) {
-      var src = grunt.file.read(file.src);
-      var json = dox.parseComments(src, { raw: true });
+    files.forEach(function(file) {
+      var srcs = file.src;
+      var data = { pkg: pkg };
       var templates = {};
+      var count = 0;
+      var readme;
 
+      // COmpile the templates
       templates.docs = hogan.compile(grunt.file.read(options.comment));
       templates.readme = hogan.compile(grunt.file.read(options.readme));
 
-      json = preProcess(json);
+      // Loop over each src
+      srcs.forEach(function(filepath) {
+        var src = grunt.file.read(filepath);
+        var ext = path.extname(filepath);
+        var name = path.basename(filepath, ext);
+        var json = dox.parseComments(src, { raw: true });
 
-      var docs = templates.docs.render({ items: json });
-      var readme = templates.readme.render({ pkg: pkg, docs: docs });
+        json = preProcess(json);
+        data[name] = templates.docs.render({ items: json });
 
+        count += json.length;
+        grunt.log.writeln('Read "' + filepath + '" with ' + json.length + ' comments');
+      });
+
+      // Template and render the final readme.md
+      readme = templates.readme.render(data);
       grunt.file.write(file.dest, readme);
-      grunt.log.writeln('Written "' + file.dest + '" with ' + json.length + ' comments');
+      grunt.log.writeln('Written "' + file.dest + '" with ' + count + ' comments');
     });
   });
 };
