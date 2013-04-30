@@ -18,6 +18,7 @@
 var dox = require('dox');
 var hogan = require('hogan.js');
 var path = require('path');
+var marked = require('marked');
 
 /**
  * Exports
@@ -63,8 +64,11 @@ module.exports = function (grunt) {
 
     for (var src in outputFiles) {
       var dest = outputFiles[src];
+      var ext = path.extname(dest);
       var template = hogan.compile(grunt.file.read(src));
       var output = template.render(data, partials);
+
+      if (ext === '.html') output = marked(output);
 
       grunt.file.write(dest, output);
       grunt.log.writeln('Written "' + dest);
