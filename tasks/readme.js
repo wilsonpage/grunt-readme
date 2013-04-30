@@ -33,57 +33,60 @@ module.exports = function (grunt) {
   // ==========================================================================
 
   grunt.registerMultiTask('readme', 'Building README', function () {
-    var pkg = grunt.config.data.pkg;
-    var data = this.data;
-    var files = this.files;
-    var options = this.options({
-      comment: 'docs/item.hogan',
-      readme: 'docs/readme.hogan'
+    var codeFiles = this.data.code;
+    var partialFiles = this.data.partials || [];
+    var outputFiles = this.data.output;
+    var partials = {};
+    var data = {
+      pkg: grunt.config.data.pkg,
+      jsdoc: []
+    };
+
+    // Code
+    codeFiles.forEach(function(file) {
+      var path = ('object' === typeof file) ? file.path : file;
+      var src = grunt.file.read(path);
+      var jsdoc = dox.parseComments(src, { raw: true });
+
+      jsdoc = preProcess(jsdoc, { cons: file.cons });
+      data.jsdoc = data.jsdoc.concat(jsdoc);
     });
 
-    files.forEach(function(file) {
-      var srcs = file.src;
-      var data = { pkg: pkg };
-      var templates = {};
-      var count = 0;
-      var readme;
+    // Partials
+    partialFiles.forEach(function(filepath){
+      var src = grunt.file.read(filepath);
+      var ext = path.extname(filepath);
+      var name = path.basename(filepath, ext);
 
-      // COmpile the templates
-      templates.docs = hogan.compile(grunt.file.read(options.comment));
-      templates.readme = hogan.compile(grunt.file.read(options.readme));
-
-      // Loop over each src
-      srcs.forEach(function(filepath) {
-        var src = grunt.file.read(filepath);
-        var ext = path.extname(filepath);
-        var name = path.basename(filepath, ext);
-        var json = dox.parseComments(src, { raw: true });
-
-        json = preProcess(json);
-        data[name] = templates.docs.render({ items: json });
-
-        count += json.length;
-        grunt.log.writeln('Read "' + filepath + '" with ' + json.length + ' comments');
-      });
-
-      // Template and render the final readme.md
-      readme = templates.readme.render(data);
-      grunt.file.write(file.dest, readme);
-      grunt.log.writeln('Written "' + file.dest + '" with ' + count + ' comments');
+      partials[name] = hogan.compile(src);
     });
+
+    for (var src in outputFiles) {
+      var dest = outputFiles[src];
+      var template = hogan.compile(grunt.file.read(src));
+      var output = template.render(data, partials);
+
+      grunt.file.write(dest, output);
+      grunt.log.writeln('Written "' + dest);
+    }
   });
 };
 
 
-function preProcess(json) {
+function preProcess(jsdoc, options) {
+  var cons = options && options.cons;
 
   // Filter out private API
-  json = json.filter(function(item) {
+  jsdoc = jsdoc.filter(function(item) {
     return item.ctx && item.isPrivate === false;
   });
 
   // Remove line breaks
-  json.forEach(function(item) {
+  jsdoc.forEach(function(item) {
+    if (item.ctx) {
+      item.ctx.cons = item.ctx.cons || cons;
+    }
+
     if (item.description.summary) {
       item.description.summary = item.description.summary.replace(/<br \/>/g, ' ');
     }
@@ -95,5 +98,5 @@ function preProcess(json) {
     }
   });
 
-  return json;
+  return jsdoc;
 }
