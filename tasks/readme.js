@@ -40,7 +40,11 @@ module.exports = function (grunt) {
     var partials = {};
     var data = {
       pkg: grunt.config.data.pkg,
-      jsdoc: []
+      jsdoc: [],
+      partials: {
+        md: {},
+        html: {}
+      }
     };
 
     // Code
@@ -59,16 +63,15 @@ module.exports = function (grunt) {
       var ext = path.extname(filepath);
       var name = path.basename(filepath, ext);
 
-      partials[name] = hogan.compile(src);
+      data.partials.md[name] = hogan.compile(src).render(data);
+      data.partials.html[name] = marked(data.partials.md[name]);
     });
 
     for (var src in outputFiles) {
       var dest = outputFiles[src];
       var ext = path.extname(dest);
       var template = hogan.compile(grunt.file.read(src));
-      var output = template.render(data, partials);
-
-      if (ext === '.html') output = marked(output);
+      var output = template.render(data);
 
       grunt.file.write(dest, output);
       grunt.log.writeln('Written "' + dest);
@@ -85,10 +88,13 @@ function preProcess(jsdoc, options) {
     return item.ctx && item.isPrivate === false;
   });
 
+  console.log(jsdoc);
+
   // Remove line breaks
   jsdoc.forEach(function(item) {
     if (item.ctx) {
       item.ctx.cons = item.ctx.cons || cons;
+      if (item.ctx.cons === item.ctx.name) item.ctx.cons = null;
     }
 
     if (item.description.summary) {
