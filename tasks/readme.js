@@ -88,8 +88,6 @@ function preProcess(jsdoc, options) {
     return item.ctx && item.isPrivate === false;
   });
 
-  console.log(jsdoc);
-
   // Remove line breaks
   jsdoc.forEach(function(item) {
     if (item.ctx) {
