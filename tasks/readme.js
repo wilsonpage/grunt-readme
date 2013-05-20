@@ -53,7 +53,7 @@ module.exports = function (grunt) {
       var src = grunt.file.read(path);
       var jsdoc = dox.parseComments(src, { raw: true });
 
-      jsdoc = preProcess(jsdoc, { cons: file.cons });
+      jsdoc = preProcess(jsdoc, file);
       data.jsdoc = data.jsdoc.concat(jsdoc);
     });
 
@@ -79,21 +79,27 @@ module.exports = function (grunt) {
   });
 };
 
-
 function preProcess(jsdoc, options) {
-  var cons = options && options.cons;
+  options = options || {};
+  options.ctx = options.ctx || {};
 
   // Filter out private API
   jsdoc = jsdoc.filter(function(item) {
-    return item.ctx && item.isPrivate === false;
+    return item.isPrivate === false;
   });
 
   // Remove line breaks
   jsdoc.forEach(function(item) {
-    if (item.ctx) {
-      item.ctx.cons = item.ctx.cons || cons;
-      if (item.ctx.cons === item.ctx.name) item.ctx.cons = null;
-    }
+    item.ctx = item.ctx || {};
+
+    var ctx = {
+      receiver: options.ctx.receiver || item.ctx.receiver,
+      name: options.ctx.name || item.ctx.name,
+      cons: options.ctx.cons || item.ctx.cons,
+      type: options.ctx.type || item.ctx.type
+    };
+
+    item.title = createTitle(ctx);
 
     if (item.description.summary) {
       item.description.summary = item.description.summary.replace(/<br \/>/g, ' ');
@@ -107,4 +113,13 @@ function preProcess(jsdoc, options) {
   });
 
   return jsdoc;
+}
+
+function createTitle(ctx) {
+  var suffix = ctx.type === 'method' ? '()' : '';
+  var title = ctx.cons
+    ? ctx.cons + '#' + ctx.name
+    : ctx.receiver + '.' + ctx.name;
+
+  return title + suffix;
 }
